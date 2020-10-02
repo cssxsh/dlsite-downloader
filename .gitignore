@@ -4,4 +4,4 @@
 build/
 **/build/
 
-test/
+/test
