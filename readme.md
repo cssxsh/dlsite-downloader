@@ -19,7 +19,8 @@ YYXXXXXX等为dlsite作品ID <br/>
 | ------------------ | -------------------------------------- | -------------------- |
 | style              | `LIGHT`                                | 用于图形界面设置     |
 | download_list_name | `Download`                             | 要自动下载的列表名称 |
-| login_id           |                                        | 登录名，一般为邮箱   |
+| login_id           |                                        | 登录ID，一般为邮箱   |
+| password           |                                        | 密码                 |
 | cname              |                                        | 本地cname域名        |
 | china_dns          | `https://223.5.5.5/dns-query`          | 中国DNS解析更快的IP  |
 | foreign_dns        | `https://cloudflare-dns.com/dns-query` | 国外DNS避免污染      |
