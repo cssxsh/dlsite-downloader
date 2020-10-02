@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="xyz.cssxsh.dlsite.Downloader">
+    <children>
+        <Button fx:id="flush" layoutX="15.0" layoutY="14.0" mnemonicParsing="false" onAction="#onFlush"
+                prefHeight="44.0" prefWidth="200.0" text="刷新"/>
+        <Button fx:id="download" layoutX="315.0" layoutY="14.0" mnemonicParsing="false" onAction="#onDownload"
+                prefHeight="44.0" prefWidth="200.0" text="刷新"/>
+        <TableView fx:id="table" layoutX="15.0" layoutY="78.0" prefHeight="400.0" prefWidth="500.0">
+            <columns>
+                <TableColumn prefWidth="75.0" text="workNo"/>
+                <TableColumn prefWidth="75.0" text="siteId"/>
+                <TableColumn prefWidth="75.0" text="authorName"/>
+            </columns>
+        </TableView>
+    </children>
+</AnchorPane>
