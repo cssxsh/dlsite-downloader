@@ -53,8 +53,8 @@ object DLsiteTool : CoroutineScope {
             Config(
                 style = "LIGHT",
                 pattern = "yyyy-MM-dd'T'HH:mm:ss'.000000Z'",
-                loginId = "cssxsh@gmail.com",
-                password = "gxaJK6.4s4ZCxtR",
+                loginId = "",
+                password = "",
                 hosts = emptyMap(),
                 dns = "https://1.0.0.1/dns-query",
                 maxAsyncNum = 16,
@@ -125,8 +125,8 @@ object DLsiteTool : CoroutineScope {
         }
         return httpClient.post<HttpResponse>(LOGIN_URL) {
             body = FormDataContent(Parameters.build {
-                append("login_id", config.loginId)
-                append("password", config.password)
+                append("login_id", config.loginId.also { require(!isEmpty()) { "登录名为空" } })
+                append("password", config.password.also { require(!isEmpty()) { "密码为空" } })
                 append("_token", token)
             })
         }.setCookie()["PHPSESSID"]?.value
