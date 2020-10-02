@@ -1,4 +1,4 @@
-package xyz.cssxsh.dlsite
+package xyz.cssxsh.dlsite.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

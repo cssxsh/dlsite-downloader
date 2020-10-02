@@ -1,4 +1,4 @@
-package xyz.cssxsh.dlsite
+package xyz.cssxsh.dlsite.data
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import xyz.cssxsh.dlsite.DLsiteTool
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -103,13 +104,13 @@ data class WorkInfo(
 
     companion object {
         object DateSerializer : KSerializer<Date> {
-            private val dateFormat : SimpleDateFormat get() = SimpleDateFormat(DLsiteTool.config.pattern)
+            private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'.000000Z'")
 
             override fun deserialize(decoder: Decoder): Date =
                 dateFormat.parse(decoder.decodeString())
 
             override val descriptor: SerialDescriptor
-                get() = PrimitiveSerialDescriptor("DateSerializerTo${dateFormat}", PrimitiveKind.STRING)
+                get() = PrimitiveSerialDescriptor("DateSerializerTo$dateFormat", PrimitiveKind.STRING)
 
             override fun serialize(encoder: Encoder, value: Date) =
                 encoder.encodeString(dateFormat.format(value))

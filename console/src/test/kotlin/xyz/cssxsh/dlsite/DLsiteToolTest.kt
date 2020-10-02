@@ -10,17 +10,22 @@ import org.junit.jupiter.api.TestInstance
 internal class DLsiteToolTest {
 
     @BeforeAll
-    fun login() = runBlocking {
+    fun login(): Unit = runBlocking {
         assertNotNull(DLsiteTool.login())
     }
 
     @Test
-    fun purchases() = runBlocking {
+    fun purchases(): Unit = runBlocking {
         assertEquals(DLsiteTool.purchases().works.size, 440)
     }
 
     @Test
     fun download(): Unit = runBlocking {
         DLsiteTool.download("VJ013799")
+    }
+
+    @Test
+    fun downloadList(): Unit = runBlocking {
+        DLsiteTool.downloadList(name = "Whisp").join()
     }
 }

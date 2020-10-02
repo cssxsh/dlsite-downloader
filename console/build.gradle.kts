@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         all {
             languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
+            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
         }
     }
 }
@@ -37,6 +38,8 @@ dependencies {
     implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp3))
     // jsoup
     implementation(jsoup(Versions.jsoup))
+    // atomicfu
+    implementation(atomicfu(Versions.atomicfu))
     // slf4j
     implementation(slf4j("simple", Versions.slf4j))
     // junit

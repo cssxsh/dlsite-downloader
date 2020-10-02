@@ -1,7 +1,7 @@
 
 allprojects {
     group = "xyz.cssxsh.dlsite"
-    version = "0.1.0-dev"
+    version = "0.2.0-dev"
     repositories {
         maven(url = "https://maven.aliyun.com/repository/releases")
         maven(url = "https://mirrors.huaweicloud.com/repository/maven")

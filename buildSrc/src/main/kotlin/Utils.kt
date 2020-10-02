@@ -25,6 +25,9 @@ fun DependencyHandler.jsoup(version: String = Versions.jsoup) =
 fun DependencyHandler.okhttp3(module: String, version: String = Versions.okhttp3) =
     "com.squareup.okhttp3:$module:$version"
 
+fun DependencyHandler.atomicfu(version: String = Versions.atomicfu) =
+    "org.jetbrains.kotlinx:atomicfu:$version"
+
 val PluginDependenciesSpec.shadow : PluginDependencySpec
     get() = id("com.github.johnrengelman.shadow").version(Versions.shadow)
 

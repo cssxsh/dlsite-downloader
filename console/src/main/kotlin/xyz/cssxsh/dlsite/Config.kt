@@ -7,16 +7,18 @@ import kotlinx.serialization.Serializable
 data class Config(
     @SerialName("style")
     val style: String,
-    @SerialName("pattern")
-    val pattern: String,
+    @SerialName("download_list_name")
+    val downloadListName: String,
     @SerialName("login_id")
     val loginId: String,
     @SerialName("password")
     val password: String,
-    @SerialName("hosts")
-    val hosts: Map<String, List<String>>,
-    @SerialName("dns")
-    val dns: String,
+    @SerialName("china_dns")
+    val chinaDns: String,
+    @SerialName("foreign_dns")
+    val foreignDns: String,
+    @SerialName("cname")
+    val cname:  Map<String, String>,
     @SerialName("max_async_num")
     val maxAsyncNum: Int,
     @SerialName("block_size_MB")
