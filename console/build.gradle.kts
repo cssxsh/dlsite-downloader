@@ -5,7 +5,7 @@ plugins {
     shadow
     kotlin("jvm") version Versions.kotlin
     kotlin("plugin.serialization") version Versions.kotlin
-    kotlin("kapt") version Versions.kotlin
+    // kotlin("kapt") version Versions.kotlin
 }
 
 application {
@@ -40,8 +40,15 @@ dependencies {
     implementation(jsoup(Versions.jsoup))
     // atomicfu
     implementation(atomicfu(Versions.atomicfu))
+    // lombok
+    // implementation(lombok(Versions.lombok))
+    // kapt(lombok(Versions.lombok))
     // slf4j
-    implementation(slf4j("simple", Versions.slf4j))
+    // implementation(slf4j("log4j12", Versions.slf4j))
+    // log4j
+    implementation(log4j("core", Versions.log4j))
+    implementation(log4j("api", Versions.log4j))
+    implementation(log4j("api-kotlin", Versions.log4jApiKotlin))
     // junit
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter", version = Versions.junit)
 }

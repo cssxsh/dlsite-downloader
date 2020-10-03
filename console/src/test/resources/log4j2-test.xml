@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration strict="true"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://logging.apache.org/log4j/2.0/config https://raw.githubusercontent.com/apache/logging-log4j2/master/log4j-core/src/main/resources/Log4j-config.xsd"
+               xmlns="http://logging.apache.org/log4j/2.0/config"
+               schema="https://raw.githubusercontent.com/apache/logging-log4j2/master/log4j-core/src/main/resources/Log4j-config.xsd">
+    <!-- 参数 -->
+    <Properties>
+        <Property name="pattern">[%-5p][%d{yyyy-MM-dd HH:mm:ss}][%l]-[%m]%n</Property>
+        <Property name="filename">log.txt</Property>
+        <Property name="charset">UTF-8</Property>
+    </Properties>
+    <!-- 日志输出 -->
+    <Appenders>
+        <!-- 日志输出到文件 -->
+        <File name="File" fileName="${filename}">
+            <PatternLayout charset="${charset}" pattern="${pattern}"/>
+            <ThresholdFilter level="trace"/>
+        </File>
+        <!-- 日志输出到控制台 -->
+        <Console name="ConsoleOut" target="SYSTEM_OUT" >
+            <PatternLayout pattern="${pattern}"/>
+            <Filters>
+                <ThresholdFilter level="warn" onMismatch="ACCEPT"/>
+            </Filters>
+        </Console>
+        <Console name="ConsoleErr" target="SYSTEM_ERR" >
+            <PatternLayout pattern="${pattern}"/>
+            <ThresholdFilter level="error"/>
+        </Console>
+    </Appenders>
+    <!-- Loggers的设置，若代码中未找到指定的logger，则会根据继承机制，使用Root -->
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="ConsoleOut"/>
+            <AppenderRef ref="ConsoleErr"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>

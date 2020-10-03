@@ -1,4 +1,4 @@
-rootProject.name = "DLsiteDownloader"
+rootProject.name = "dlsite-downloader"
 include(
     "app",
     "console"

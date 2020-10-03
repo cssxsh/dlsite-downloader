@@ -7,11 +7,11 @@ import io.ktor.util.date.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import xyz.cssxsh.dlsite.DLsiteTool.logger
+import org.apache.logging.log4j.kotlin.Logging
 import kotlin.math.min
 
 
-class LoggerCookiesStorage : CookiesStorage {
+class LoggerCookiesStorage : CookiesStorage, Logging {
     val container: MutableList<Cookie> = mutableListOf()
     private val oldestCookie: AtomicLong = atomic(0L)
     private val mutex = Mutex()
@@ -36,16 +36,14 @@ class LoggerCookiesStorage : CookiesStorage {
             if (it.domain.isNullOrBlank()) it.copy(domain = requestUrl.host) else it
         }
 
-        val isOld= container.removeAll { it.name == cookie.name && it.matches(requestUrl) }
+        container.removeAll { it.name == cookie.name && it.matches(requestUrl) }
         container.add(cookieNow)
         cookie.expires?.timestamp?.let { expires ->
             if (oldestCookie.value > expires) {
                 oldestCookie.value = expires
             }
         }
-        if (isOld.not()) logger.info("${cookieNow.domain} 已添加 Cookie(${cookie.name}=${cookie.value.let { 
-            if(it.length <= 64) it else "${it.substring(0, 64)}..." 
-        }})")
+        logger.trace { "${cookieNow.domain} 已添加 ${cookie}=${cookie.value}" }
     }
 
     override fun close() {

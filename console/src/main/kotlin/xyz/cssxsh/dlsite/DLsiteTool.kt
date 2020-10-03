@@ -11,17 +11,14 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.sync.*
 import kotlinx.serialization.json.Json
 import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import org.jsoup.Jsoup
-import org.slf4j.*
 import xyz.cssxsh.dlsite.data.*
 import java.io.File
 import java.io.RandomAccessFile
@@ -29,8 +26,9 @@ import java.lang.Long.min
 import java.net.InetAddress
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.measureTime
+import org.apache.logging.log4j.kotlin.Logging
 
-object DLsiteTool : CoroutineScope {
+object DLsiteTool : CoroutineScope, Logging  {
     private const val CONFIG_FILE = "config.json"
     private const val DATA_FILE = "data.json"
     private const val PURCHASES_URL = "https://play.dlsite.com/api/purchases"
@@ -39,8 +37,6 @@ object DLsiteTool : CoroutineScope {
     private const val PLAY_LOGIN_URL = "https://play.dlsite.com/login"
     private const val LOGIN_URL = "https://login.dlsite.com/login"
     private const val MYLIST_URL = "https://play.dlsite.com/api/mylist/mylists"
-
-    val logger: Logger = requireNotNull(LoggerFactory.getLogger(this::class.java)) { "创建logger失败" }
 
     override val coroutineContext: CoroutineContext by lazy {
         Dispatchers.IO + CoroutineName("DListeTool")
@@ -88,7 +84,7 @@ object DLsiteTool : CoroutineScope {
         override fun lookup(hostname: String): List<InetAddress> = host.getOrElse(hostname) {
             (config.cname[hostname]?.let { chinaDoh.lookup(it) } ?: foreignDoh.lookup(hostname)).also { list ->
                 host[hostname] = list
-                logger.info("域名 $hostname 查询, 结果${list}")
+                logger.trace { "域名 $hostname 查询, 结果${list}" }
             }
         }
 
@@ -120,7 +116,7 @@ object DLsiteTool : CoroutineScope {
 
     suspend fun login(): String? {
         val config = config
-        logger.info("开始登录 用户名: ${config.loginId} , 密码: ${config.password} ")
+        logger.info {"开始登录 用户名: ${config.loginId} , 密码: ${config.password} " }
         val token = httpClient.get<HttpResponse>(LOGIN_URL).setCookie().let { list ->
             requireNotNull(list["XSRF-TOKEN"]?.value) { "XSRF-TOKEN 为空" }
         }
@@ -138,10 +134,10 @@ object DLsiteTool : CoroutineScope {
     suspend fun purchases(block: (List<WorkInfo>) -> Unit = {}): WorkData = withContext(coroutineContext) {
         suspend fun getPurchases(page: Int) = httpClient.get<Purchases>(PURCHASES_URL) {
             parameter("page", page)
-            logger.info("Load WorkData form ${url.buildString()}")
+            logger.info { "Load WorkData form ${url.buildString()}" }
         }.also {
             it.works.apply(block)
-            logger.info("Load WorkData count ${it.works.size}")
+            logger.info {"Load WorkData count ${it.works.size}" }
         }
 
         getPurchases(1).run {
@@ -172,19 +168,19 @@ object DLsiteTool : CoroutineScope {
 
     fun downloadList(name: String): Job = launch {
         requireNotNull(myLists()[name.trim()]) { "未找到列表$name" }.let { list ->
-            logger.info("尝试下载列表 ${list.name} ")
+            logger.info {"尝试下载列表 ${list.name} (${list.id})" }
             list.works.forEach { workNO ->
                 runCatching {
                     download(workNO)
                 }.onFailure {
-                    logger.error(it)
+                    logger.error(it) { "下载$workNO 失败" }
                 }
             }
         }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private fun downloadFile(url: String, dir: File): Job = launch {
+    private fun downloadFile(url: String, dir: File): Deferred<File> = async {
         val config = config
 
         val response = httpClient.get<HttpResponse>(url) {
@@ -202,8 +198,8 @@ object DLsiteTool : CoroutineScope {
 
         val file = File(dir, filename).also {
             if (it.exists()) {
-                logger.info("文件${it.toURI()}已存在，将跳过下载")
-                this.cancel()
+                logger.info { "文件${it.toURI()}已存在，将跳过下载" }
+                return@async it
             }
         }
 
@@ -217,10 +213,9 @@ object DLsiteTool : CoroutineScope {
         val blockNum: Int = ((length - 1) / blockSize + 1).toInt()
 
         var finishNum = 0
-        val mutex = Mutex()
         val channel: Channel<Int> = Channel(config.maxAsyncNum)
 
-        val downloadBlock: suspend (index: Int) -> Unit = { index ->
+        suspend fun downloadBlock(index: Int) {
             val start = (index * blockSize)
             val end = min((index + 1) * blockSize, length) - 1
             httpClient.get<ByteArray>(url) {
@@ -238,34 +233,36 @@ object DLsiteTool : CoroutineScope {
         }
 
         measureTime {
-            logger.info("文件 $filename (${length / (1024 * 1024)}M)开始下载")
+            logger.info { "文件 $filename (${length / (1024 * 1024)}M)开始下载" }
 
             List(blockNum) { index ->
                 async {
                     channel.send(index)
                     while (isActive)  {
-                        runCatching {
+                        val isSuccess = runCatching {
                             downloadBlock(index)
                         }.onSuccess {
                             channel.receive()
-                            mutex.withLock {
+                            synchronized(finishNum) {
                                 finishNum++
-                                logger.debug("文件 $filename 块 $index 下载完成, 总完成度 $finishNum/$blockNum ")
+                                logger.debug { "文件 $filename 块 $index 下载完成, 总完成度 $finishNum/$blockNum " }
                             }
-                            return@async
                         }.onFailure {
-                            logger.error("文件 $filename 块 $index 下载失败, 错误 ${it.message} ")
+                            logger.error(it) { "文件 $filename 块 $index 下载失败 "}
                         }.isSuccess
+
+                        if (isSuccess) break
                     }
                 }
             }.awaitAll()
         }.let {
             val size = length / (1024.0 * 1024.0)
             val speed = size / it.inSeconds
-            logger.info("文件 ${file.toURI()} (${size}MB) 下载完毕 共计${it.inMinutes} 分钟 速度${speed} MB/s")
+            logger.info { "文件 ${file.toURI()} (${size}MB) 下载完毕 共计${it.inMinutes} 分钟 速度${speed} MB/s" }
         }
 
         tempFile.renameTo(file)
+        return@async file
     }
 
     suspend fun download(workNO: String): File {
@@ -275,12 +272,12 @@ object DLsiteTool : CoroutineScope {
 
         val dir = File(workNO).apply { mkdir() }
 
-        logger.info(" 下载任务 $workNO 开始, 目录 ${dir.toURI()} ")
+        logger.info { "下载任务 $workNO 开始, 目录 ${dir.toURI()} " }
 
         httpClient.get<HttpResponse>(DOWNLOAD_URL) {
             parameter("workno", workNO)
             header(HttpHeaders.Range, "bytes=0-0")
-            logger.info("开始链接 ${url.buildString()}")
+            logger.info { "开始链接 ${url.buildString()}" }
         }.apply { setCookie() }.let { response ->
             when (response.request.url.host) {
                 // 直接下载
@@ -292,7 +289,7 @@ object DLsiteTool : CoroutineScope {
                         it.matches("""\w{4}-\w{4}-\w{4}-\w{4}""".toRegex())
                     }?.let { license ->
                         File(dir, "License.txt").writeText(license)
-                        logger.info("作品${workNO} 的许可证 $license 已保存")
+                        logger.info { "作品${workNO} 的许可证 $license 已保存" }
                     }
                     // Download list
                     document.select(".work_download a").forEach { element ->
@@ -317,7 +314,7 @@ object DLsiteTool : CoroutineScope {
                     runCatching {
                         download(workNO)
                     }.onFailure {
-                        logger.error(it)
+                        logger.error(it) { "下载$workNO 失败" }
                     }
                 }
             } else {

@@ -16,6 +16,9 @@ fun DependencyHandler.jmetro(version: String = Versions.jmetro) =
 fun DependencyHandler.slf4j(module: String, version: String = Versions.slf4j) =
     "org.slf4j:slf4j-$module:$version"
 
+fun DependencyHandler.log4j(module: String, version: String = Versions.log4j) =
+    "org.apache.logging.log4j:log4j-$module:$version"
+
 fun DependencyHandler.javafx(version: String = Versions.javafx) =
     "org.openjfx:javafx:$version"
 
@@ -27,6 +30,9 @@ fun DependencyHandler.okhttp3(module: String, version: String = Versions.okhttp3
 
 fun DependencyHandler.atomicfu(version: String = Versions.atomicfu) =
     "org.jetbrains.kotlinx:atomicfu:$version"
+
+fun DependencyHandler.lombok(version: String = Versions.lombok) =
+    "org.projectlombok:lombok:$version"
 
 val PluginDependenciesSpec.shadow : PluginDependencySpec
     get() = id("com.github.johnrengelman.shadow").version(Versions.shadow)
